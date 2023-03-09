@@ -60,10 +60,8 @@ router.patch("/user/:id", rateLimit({
         if (typeof req.body.password == "string") {
             user.password = req.body.password;
         }
-        if (ObjectId.isValid(req.body.role)) {
-            user.role = req.body.role;
-        }
-        await (await user.save({ validateBeforeSave: true })).populate("role");
+
+        await (await user.save({ validateBeforeSave: true }));
 
         res.status(200).json(User.getUserFields(user));
     } catch (error) {

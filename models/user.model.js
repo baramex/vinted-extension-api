@@ -20,6 +20,9 @@ userSchema.pre("save", async function (next) {
         if (!PASSWORD_REGEX.test(this.password)) throw new Error({ message: "Le mot de passe est invalide.", error: "InvalidPassword" });
         this.password = await hash(this.password, 10);
     }
+    if (this.isModified("email")) {
+        this.confirmed = false;
+    }
     next();
 });
 userSchema.get("role", function () {
@@ -29,10 +32,8 @@ userSchema.get("role", function () {
 const UserModel = model("User", userSchema, "users");
 
 class User {
-    static populate = "role";
-
     static async create(password, email, role) {
-        return (await new UserModel({ password, email, role }).save()).populate(User.populate);
+        return (await new UserModel({ password, email, role }).save());
     }
 
     static hasPermission(user, ...permissions) {
@@ -42,21 +43,21 @@ class User {
     }
 
     static getUserById(id) {
-        return UserModel.findById(id).populate(User.populate);
+        return UserModel.findById(id);
     }
 
     static getAll() {
-        return UserModel.find().populate(User.populate);
+        return UserModel.find();
     }
 
     static async getMailList(...permissions) {
-        const users = await UserModel.find({}, { email: 1, role: 1 }).populate(User.populate);
+        const users = await UserModel.find({}, { email: 1, role: 1 });
         return users.filter(p => User.hasPermission(p, ...permissions)).map(a => a.email);
     }
 
     static async check(email, password) {
         if (!email || !password) return false;
-        const user = await UserModel.findOne({ email }).populate(User.populate);
+        const user = await UserModel.findOne({ email });
         if (!user) return false;
         if (!user.password) return false;
         if (await compare(password, user.password)) return user;
