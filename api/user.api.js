@@ -1,8 +1,9 @@
-const { ObjectId } = require('mongodb');
 const { User, UserMiddleware } = require('../models/user.model');
 const { SessionMiddleware } = require('../models/session.model');
 const { rateLimit } = require("express-rate-limit");
 const { PERMISSIONS } = require('../utils/roles');
+const { List } = require('../models/list.model');
+const { Republication } = require('../models/republication.model');
 
 const router = require('express').Router();
 
@@ -49,7 +50,7 @@ router.patch("/user/:id", rateLimit({
     max: 10,
     standardHeaders: true,
     legacyHeaders: false
-}), SessionMiddleware.requiresValidAuthExpress, UserMiddleware.parseParamsUser(PERMISSIONS.EDIT_USERS), async (req, res) => {
+}), SessionMiddleware.requiresValidAuthExpress, UserMiddleware.parseParamsUser(PERMISSIONS.MANAGE_USERS), async (req, res) => {
     try {
         if (!req.body) throw new Error({ message: "Requête invalide.", error: "InvalidRequest" });
         const user = req.paramsUser;
@@ -64,6 +65,30 @@ router.patch("/user/:id", rateLimit({
         await (await user.save({ validateBeforeSave: true }));
 
         res.status(200).json(User.getUserFields(user));
+    } catch (error) {
+        console.error(error);
+        res.status(400).json(error.message || { message: "Une erreur est survenue.", error: "UnknownError" });
+    }
+});
+
+router.get("/user/:id/lists", SessionMiddleware.requiresValidAuthExpress, UserMiddleware.parseParamsUser(PERMISSIONS.VIEW_USERS, PERMISSIONS.VIEW_LISTS), async (req, res) => {
+    try {
+        const user = req.paramsUser;
+        const lists = await List.getByUserId(user._id);
+
+        res.status(200).json(lists);
+    } catch (error) {
+        console.error(error);
+        res.status(400).json(error.message || { message: "Une erreur est survenue.", error: "UnknownError" });
+    }
+});
+
+router.get("/user/:id/republications", SessionMiddleware.requiresValidAuthExpress, UserMiddleware.parseParamsUser(PERMISSIONS.VIEW_USERS, PERMISSIONS.VIEW_REPUBLICATIONS), async (req, res) => {
+    try {
+        const user = req.paramsUser;
+        const republications = await Republication.getByUserId(user._id);
+
+        res.status(200).json(republications);
     } catch (error) {
         console.error(error);
         res.status(400).json(error.message || { message: "Une erreur est survenue.", error: "UnknownError" });

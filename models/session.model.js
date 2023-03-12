@@ -31,7 +31,7 @@ session.post("validate", async function (doc, next) {
     next();
 });
 
-const SessionModel = model('Session', session);
+const SessionModel = model('Session', session, "sessions");
 
 class Session {
     static expiresIn = 60 * 60 * 24 * 2;

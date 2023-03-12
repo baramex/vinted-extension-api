@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 const { default: isEmail } = require("validator/lib/isEmail");
 const { ObjectId } = require("mongodb");
 const { hash, compare } = require("bcrypt");
-const { ROLE_VALUES } = require("../utils/roles");
+const { ROLE_VALUES, PERMISSIONS } = require("../utils/roles");
 const { CustomError } = require("../utils/errors");
 
 const PASSWORD_REGEX = /^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,32}$)/;
